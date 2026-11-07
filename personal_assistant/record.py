@@ -9,7 +9,7 @@ from pathlib import Path
 import yaml
 
 FOLDERS = ("journal", "facts", "people", "precedents", "notes", "skills", "trackers", "reminders")
-TEMPLATES = Path(__file__).resolve().parent.parent / "kit" / "templates" / "record"
+TEMPLATES = Path(__file__).resolve().parent.parent / "templates" / "record"
 
 
 def as_date(value) -> date | None:

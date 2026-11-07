@@ -13,9 +13,9 @@ the conversation, so nothing the person or a message says can talk it round.
 import re
 from concurrent.futures import ThreadPoolExecutor
 
-from system.config import CHARTERS, MODELS
-from system.llm import ask_json
-from system.record import Record
+from personal_assistant.config import CHARTERS, MODELS
+from personal_assistant.llm import ask_json
+from personal_assistant.record import Record
 
 CHECKER = (CHARTERS / "policy_checker.md").read_text(encoding="utf-8")
 

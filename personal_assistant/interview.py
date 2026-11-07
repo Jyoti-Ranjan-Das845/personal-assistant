@@ -9,8 +9,8 @@ through, whether time is short), and the interviewer is told the next step
 every time it updates the ledger.
 """
 
-from system import proposals
-from system.record import Record
+from personal_assistant import proposals
+from personal_assistant.record import Record
 
 ESSENTIALS = [
     ("name", "their name and pronouns"),

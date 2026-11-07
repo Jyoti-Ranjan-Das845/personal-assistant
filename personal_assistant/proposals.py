@@ -14,8 +14,8 @@ from pathlib import Path
 
 import yaml
 
-from system.policy import check_proposal
-from system.redact import redact
+from personal_assistant.policy import check_proposal
+from personal_assistant.redact import redact
 
 # Phrases that would turn a refused request into a standing rule that weakens a safeguard.
 WAIVERS = re.compile(
@@ -23,7 +23,7 @@ WAIVERS = re.compile(
     r"|skip (the )?approvals?|approve (it|them|everything|all)( automatically)?( for me)?"
     r"|(treat|take) .{0,40} as (if )?(they were |it were |coming )?from (me|her|him|them)|act (on|in) my name"
     r"|no need to (ask|check|confirm)|just (put|add) it in")
-from system.record import Record
+from personal_assistant.record import Record
 
 SECTIONS = {
     "who": "## Who",
@@ -314,10 +314,10 @@ def resolve(record: Record, ids: list[str], approve: bool, by: str = "the person
 
 # Approved changes that alter what the agents' instructions carry: their name, profile, rules and skills.
 REFRESH = {"identity", "profile_section", "hard_line", "threshold", "skill"}
-from system.config import RECORD as LIVE_RECORD  # noqa: E402  the record the live agents use
+from personal_assistant.config import RECORD as LIVE_RECORD  # noqa: E402  the record the live agents use
 
 
 def refresh_agents() -> None:
     """Rebuild the Omnigent agent configs so new sessions start from the approved record."""
-    script = Path(__file__).resolve().parent.parent / "scripts" / "build_agents.py"
+    script = Path(__file__).resolve().parent / "build_agents.py"
     subprocess.run([sys.executable, str(script)], capture_output=True, text=True, cwd=script.parent.parent)

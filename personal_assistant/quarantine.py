@@ -8,10 +8,10 @@ result is cached next to the item so each item is read once.
 import json
 from pathlib import Path
 
-from system.config import CHARTERS, MODELS
-from system.llm import ask_json
-from system.record import Record
-from system.redact import redact
+from personal_assistant.config import CHARTERS, MODELS
+from personal_assistant.llm import ask_json
+from personal_assistant.record import Record
+from personal_assistant.redact import redact
 
 READER = (CHARTERS / "quarantine_reader.md").read_text(encoding="utf-8")
 

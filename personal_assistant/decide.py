@@ -22,10 +22,10 @@ import json
 import re
 from concurrent.futures import ThreadPoolExecutor
 
-from system import policy, prompts
-from system.config import MODELS
-from system.llm import ask, ask_json
-from system.record import Record
+from personal_assistant import policy, prompts
+from personal_assistant.config import MODELS
+from personal_assistant.llm import ask, ask_json
+from personal_assistant.record import Record
 
 
 LEVELS = ["low", "medium", "high"]

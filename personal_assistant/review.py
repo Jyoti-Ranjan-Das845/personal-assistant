@@ -12,9 +12,9 @@ from concurrent.futures import ThreadPoolExecutor
 
 import yaml
 
-from system.config import CHARTERS, MODELS
-from system.llm import ask_json
-from system.record import Record
+from personal_assistant.config import CHARTERS, MODELS
+from personal_assistant.llm import ask_json
+from personal_assistant.record import Record
 
 CHECKER = (CHARTERS / "precedent_checker.md").read_text(encoding="utf-8")
 

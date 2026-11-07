@@ -2,7 +2,7 @@
 in one chat, sends the native case finder to discover what it can reach and shows the person the list.
 
     PYTHONPATH=$PWD omnigent start --server "" --no-open
-    python3 scripts/check_onboarding_live.py
+    python3 tests/check_onboarding_live.py
     omnigent stop
 
 It needs Omnigent's client library; if this Python lacks it, the script restarts
@@ -23,7 +23,6 @@ import httpx
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-sys.path.insert(0, str(ROOT / "scripts"))
 
 try:
     from omnigent_client import OmnigentClient, SessionsChat
@@ -36,8 +35,8 @@ except ImportError:  # use the Python the omnigent command itself runs on, where
         os.execv(python, [python, *sys.argv])
     raise SystemExit("Omnigent's client library is not available; install Omnigent first.")
 
-import build_agents  # noqa: E402
-from system.config import OMNIGENT_SERVER as SERVER, TEMPLATE_RECORD, WORKSPACE  # noqa: E402
+from personal_assistant import build_agents  # noqa: E402
+from personal_assistant.config import OMNIGENT_SERVER as SERVER, TEMPLATE_RECORD, WORKSPACE  # noqa: E402
 
 OUT = WORKSPACE / "onboarding-live-check"
 

@@ -14,11 +14,11 @@ import uuid
 from datetime import date
 from pathlib import Path
 
-from system import prompts
-from system.config import MODELS, ROOT
-from system.record import Record
+from personal_assistant import prompts
+from personal_assistant.config import MODELS, ROOT
+from personal_assistant.record import Record
 
-SERVER = ROOT / "system" / "tools_server.py"
+SERVER = ROOT / "personal_assistant" / "tools_server.py"
 
 
 def mcp_config(role: str, record_dir: Path, state: Path, today: str | None) -> dict:

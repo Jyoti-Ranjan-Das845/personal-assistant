@@ -24,9 +24,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
 
-from system import proposals  # noqa: E402
-from system.config import AGENTS, RECORD  # noqa: E402
-from system.record import Record  # noqa: E402
+from personal_assistant import proposals  # noqa: E402
+from personal_assistant.config import AGENTS, RECORD  # noqa: E402
+from personal_assistant.record import Record  # noqa: E402
 
 
 def omnigent_env() -> dict:
@@ -70,7 +70,7 @@ def ensure_omnigent() -> dict:
 
 def build() -> None:
     """Write the Omnigent configs for this machine from the charters and the person's record."""
-    done = subprocess.run([sys.executable, str(ROOT / "scripts" / "build_agents.py")], cwd=ROOT, capture_output=True, text=True)
+    done = subprocess.run([sys.executable, str(ROOT / "personal_assistant" / "build_agents.py")], cwd=ROOT, capture_output=True, text=True)
     if done.returncode != 0:
         sys.exit(done.stderr.strip() or done.stdout.strip())
 
@@ -123,7 +123,7 @@ def main() -> None:
     elif command in ("approve", "reject"):
         decide_on(args, approve=command == "approve")
     elif command == "check":
-        sys.exit(subprocess.run([sys.executable, str(ROOT / "scripts" / "selftest.py")]).returncode)
+        sys.exit(subprocess.run([sys.executable, str(ROOT / "tests" / "selftest.py")]).returncode)
     elif command == "stop":
         subprocess.run(["omnigent", "stop"])
     else:

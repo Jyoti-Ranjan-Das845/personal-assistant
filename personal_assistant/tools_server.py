@@ -7,7 +7,7 @@ code: reads stay inside the record, inbox items arrive only through the
 quarantine reader, writes are proposals only, and there is no tool that
 sends, pays, books or posts.
 
-    python3 system/tools_server.py --role chief_of_staff --record record --state state [--today 2026-11-07]
+    python3 personal_assistant/tools_server.py --role chief_of_staff --record record --state state [--today 2026-11-07]
 """
 
 import argparse
@@ -26,9 +26,9 @@ try:  # mcp 2.x renamed FastMCP to MCPServer
 except ImportError:
     from mcp.server.fastmcp import FastMCP  # noqa: E402
 
-from system import decide as decision, interview, policy, proposals, quarantine  # noqa: E402
-from system.redact import redact  # noqa: E402
-from system.record import FOLDERS, Record  # noqa: E402
+from personal_assistant import decide as decision, interview, policy, proposals, quarantine  # noqa: E402
+from personal_assistant.redact import redact  # noqa: E402
+from personal_assistant.record import FOLDERS, Record  # noqa: E402
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--role", required=True)
@@ -336,7 +336,7 @@ def search_record(terms: list[str]) -> str:
 def check_rules(situation: str, options: list[str]) -> str:
     """The policy engine on its own, without the full decision procedure: which options cross a hard line,
     and whether the money involved (a monthly amount also counts over a year) puts it above their threshold."""
-    from system import policy
+    from personal_assistant import policy
     rec = record()
     stakes = policy.stakes(rec, situation, options)
     out = {"removed_by_hard_lines": policy.check_options(rec, situation, options), "stakes": stakes}
@@ -352,7 +352,7 @@ def request_build(request: str, their_yes: str = "") -> str:
     if len(their_yes.strip()) < 2:
         return ("Not sent. First describe the piece to the person in two or three lines (what it holds and what it does), "
                 "and ask whether they want it. Call again with their words in their_yes only if they say yes.")
-    from system.agent_runner import run_agent
+    from personal_assistant.agent_runner import run_agent
     reply = run_agent("builder", Path(ARGS.record), STATE, f"{request}\n\nThe person agreed in these words: {their_yes}", today=ARGS.today)
     return f"Builder's reply: {reply['text']}"
 
@@ -383,7 +383,7 @@ def review_due() -> str:
     """Everything the weekly review needs, worked out in code: facts past their review date; journal entries whose
     outcome review is due, in full, with the entries that share their area or people; rulings worded so widely that
     they could cross a hard line; and rulings that conflict, or only look alike."""
-    from system import review
+    from personal_assistant import review
     rec = record()
     due = rec.due_reviews()
     texts = {e["front"].get("id", e["path"].stem): e["text"] for e in rec.journal()}

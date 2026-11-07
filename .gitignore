@@ -1,4 +1,4 @@
-# Generated on each machine by scripts/build_agents.py; never shipped
+# Generated on each machine by personal_assistant/build_agents.py; never shipped
 agents/
 state/
 __pycache__/
@@ -10,5 +10,5 @@ workspace/*
 # Material from building the system; not part of the pack
 archive/
 
-# The person's own record: created from kit/templates/record on first run, and never uploaded
+# The person's own record: created from templates/record on first run, and never uploaded
 record/

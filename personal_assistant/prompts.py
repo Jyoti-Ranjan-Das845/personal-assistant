@@ -1,7 +1,7 @@
-"""Assemble each agent's instructions from the kit and the person's record."""
+"""Assemble each agent's instructions from prompts/ and the person's record."""
 
-from system.config import CHARTERS, FRONT_DOOR, KIT
-from system.record import Record
+from personal_assistant.config import CHARTERS, FRONT_DOOR, PROMPTS
+from personal_assistant.record import Record
 
 
 def header(record: Record, with_date: bool = True) -> str:
@@ -19,7 +19,7 @@ def charter(role: str) -> str:
 
 
 def constitution() -> str:
-    return (KIT / "constitution.md").read_text(encoding="utf-8").strip()
+    return (PROMPTS / "constitution.md").read_text(encoding="utf-8").strip()
 
 
 NATIVE = ("worker", "case_finder")
@@ -30,7 +30,7 @@ def build(role: str, record: Record, with_date: bool = True) -> str:
     """Instructions for one agent. Front-door agents also carry the approved core profile. A native agent, which has
     its own file access, reads the constitution from disk, because its whole prompt must fit in one tmux command."""
     rules = ("---\n\nEvery agent in this system follows its constitution. Read it before you start, with your file tools: "
-             f"{KIT / 'constitution.md'}" if role in NATIVE else "---\n\n" + constitution())
+             f"{PROMPTS / 'constitution.md'}" if role in NATIVE else "---\n\n" + constitution())
     parts = [header(record, with_date), charter(role), rules]
     if role in FRONT_DOOR or role in ("worker", "case_finder", "preparer"):
         parts.insert(1, f"Workers file their findings in {record.root / 'inbox'}.")

@@ -10,9 +10,9 @@ import os
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-KIT = ROOT / "kit"
-CHARTERS = KIT / "charters"
-TEMPLATE_RECORD = KIT / "templates" / "record"   # the empty record the pack ships with; a person's record starts as a copy
+PROMPTS = ROOT / "prompts"                      # the constitution and every agent's instructions
+CHARTERS = PROMPTS / "agents"
+TEMPLATE_RECORD = ROOT / "templates" / "record"  # the empty record a person's own record starts as a copy of
 
 
 def _place(variable: str, default: Path) -> Path:

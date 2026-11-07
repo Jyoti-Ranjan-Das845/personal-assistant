@@ -66,19 +66,43 @@ These are enforced in code, not left to the agents' good behaviour:
 - **Outside messages cannot give orders.** Emails and messages are read by a separate model with no tools, and only a summary reaches the agents. Passwords, codes and card or ID numbers are blacked out before any agent sees them.
 - **The worker and case finder stay in their lane.** They may write only in `workspace/` and your record's inbox, and read only there, in your Claude and Codex chats, and in folders you allow. They never read secret stores such as `~/.ssh`, never delete, ask you before sending anything, and lose web access once they have read your private data.
 
-`kit/METHODS.md` explains the research method behind each agent and everything the code enforces.
+`docs/METHODS.md` explains the research method behind each agent and everything the code enforces.
 
-## Where things live
+## Project layout
 
 ```
-pa                 the one command
-kit/               the same for everyone: the constitution, each agent's instructions, templates
-system/            the code: tools, the decision path, the policy engine, the guards
-scripts/           helpers pa runs for you
-docs/              the architecture diagram
-workspace/         where the worker and case finder may work
-record/            your own record, created on first run and never uploaded
+pa                    the command you run (onboard, chat, review, approve, ...)
+personal_assistant/   all the Python code
+prompts/              what each agent is told, in plain English
+templates/record/     the empty record a new user starts from
+tests/                the code checks behind ./pa check
+docs/                 the architecture diagram and the methods behind each agent
+workspace/            the only folder the worker and case finder may write in
 ```
+
+Two more folders appear on your machine when you first run it, and neither is uploaded: `record/`, your own record, and `agents/`, the Omnigent settings built for your machine.
+
+**`personal_assistant/`**, by what each file does:
+
+| File | What it does |
+|---|---|
+| `tools_server.py` | The tools each agent may use, and the only way they can read or change anything |
+| `decide.py` | The decision path: evidence, advisor, challenger, tester, then the code's read and confidence |
+| `policy.py` | Checks options against your hard lines and your money line |
+| `proposals.py` | Every change to your record waits here for your approval |
+| `record.py` | Reads your record: profile, rules, journal, facts, what is due |
+| `interview.py` | Decides what the interviewer asks next |
+| `review.py` | The weekly review's checks: conflicts, outdated entries, drift |
+| `quarantine.py`, `redact.py` | Make outside messages safe to read: summaries only, secrets blacked out |
+| `omnigent_policies.py` | The guard on the worker and case finder, and the approval cards |
+| `prompts.py` | Puts together each agent's instructions from `prompts/` and your record |
+| `build_agents.py` | Writes the Omnigent settings for your machine (`pa` runs it for you) |
+| `agent_runner.py`, `llm.py` | Run an agent, or a single isolated model call, through the `claude` command |
+| `config.py` | Where everything lives, and which Claude model each agent uses |
+
+**`prompts/`** holds `constitution.md`, the principles every agent follows, and `agents/`, one file per agent describing its job and how to do it.
+
+## Settings
 
 Everything in the pack is generic; everything about you lives in `record/`. Omnigent keeps its own chat history in `~/.omnigent/`. The pack works from any folder, and these optional settings move things elsewhere:
 

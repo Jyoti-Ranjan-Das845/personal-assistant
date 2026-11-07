@@ -1,6 +1,6 @@
 """Check the system's code paths without calling any model.
 
-    python3 scripts/selftest.py
+    python3 tests/selftest.py
 
 It works on a temporary copy of the empty record and on a small made-up record it
 writes itself, so nothing real is touched. A model call anywhere here is a bug in the test.
@@ -16,9 +16,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from system import decide, interview, policy, proposals  # noqa: E402
-from system.config import TEMPLATE_RECORD  # noqa: E402
-from system.record import Record  # noqa: E402
+from personal_assistant import decide, interview, policy, proposals  # noqa: E402
+from personal_assistant.config import TEMPLATE_RECORD  # noqa: E402
+from personal_assistant.record import Record  # noqa: E402
 
 FAILED = []
 
@@ -167,7 +167,7 @@ def main() -> None:
     check("features are read from the brief", decide.features('x\n```json\n{"features": ["a", "b"]}\n```') == ["a", "b"])
 
     # the native agents' guard: their own folders only
-    from system.omnigent_policies import worker_guard
+    from personal_assistant.omnigent_policies import worker_guard
     space = ROOT / "workspace"  # the guard only judges paths here; nothing is written
     guard = worker_guard(project_root=str(ROOT), workspace=str(space), record_dir=str(mock))
     def verdict(name, args, tainted=False):
@@ -181,10 +181,10 @@ def main() -> None:
     check("it never reads secret stores", verdict("Read", {"file_path": str(home / ".ssh" / "id_rsa")})["result"] == "DENY")
     stores = verdict("Read", {"file_path": str(home / ".codex" / "sessions" / "a.jsonl")})
     check("it may read their conversation stores, which marks the session", stores["result"] == "ALLOW" and bool(stores.get("state_updates")))
-    check("it may not write the system or the record", verdict("Write", {"file_path": str(ROOT / "kit" / "x.md"), "content": "x"})["result"] == "DENY"
+    check("it may not write the system or the record", verdict("Write", {"file_path": str(ROOT / "prompts" / "x.md"), "content": "x"})["result"] == "DENY"
           and verdict("Write", {"file_path": str(mock / "core_profile.md"), "content": "x"})["result"] == "DENY")
     check("shell is held to the same folders", verdict("Bash", {"command": f"cat {home}/Documents/notes.md"})["result"] == "DENY"
-          and verdict("Bash", {"command": "cat ../system/decide.py"})["result"] == "DENY"
+          and verdict("Bash", {"command": "cat ../personal_assistant/decide.py"})["result"] == "DENY"
           and verdict("Bash", {"command": "ls -la && python3 summarise.py notes.md"})["result"] == "ALLOW")
     check("after private data, no web", verdict("WebSearch", {"query": "x"}, tainted=True)["result"] == "DENY"
           and verdict("WebSearch", {"query": "x"})["result"] == "ALLOW")
@@ -193,11 +193,11 @@ def main() -> None:
 
     temp_pack = worker_guard(project_root=str(tmp / "pack"), workspace=str(tmp / "pack" / "workspace"), record_dir=str(tmp / "pack" / "record"))
     check("the pack stays shut even when it sits in a temp folder",
-          temp_pack({"type": "tool_call", "data": {"name": "Bash", "arguments": {"command": "cat ../system/decide.py"}},
+          temp_pack({"type": "tool_call", "data": {"name": "Bash", "arguments": {"command": "cat ../personal_assistant/decide.py"}},
                      "session_state": {}}, {})["result"] == "DENY")
 
     # the weekly review's checks can hand dated rulings to the checker
-    from system import review
+    from personal_assistant import review
     (mock / "precedents").mkdir(exist_ok=True)
     for pid, ruling in (("PR-1", "Pay fees from the rent."), ("PR-2", "Rent stays with the flat.")):
         (mock / "precedents" / f"{pid}.yaml").write_text(f"id: {pid}\nruling: {ruling}\ndate: 2026-01-0{pid[-1]}\n", encoding="utf-8")

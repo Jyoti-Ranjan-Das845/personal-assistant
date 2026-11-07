@@ -16,7 +16,7 @@ worker's instructions:
   could act as the person without passing any of the checks above.
 - Files: a native agent may write only in its own workspace and the record's
   inbox, and may read only there, in the person's Claude and Codex
-  conversation stores, in the kit (for the constitution), and in folders the
+  conversation stores, in prompts/ (for the constitution), and in folders the
   person has allowed (PA_READABLE). Secret stores such as ~/.ssh are denied
   outright, and shell commands are held to the same folders. Reading the
   person's private data, their stores, the inbox or an allowed folder, marks
@@ -31,7 +31,7 @@ on the Omnigent server's and runner's Python path.
           type: function
           on: [tool_call]
           function:
-            path: system.omnigent_policies.worker_guard
+            path: personal_assistant.omnigent_policies.worker_guard
             arguments: {project_root: /path/to/personal-assistant}
 """
 
@@ -115,11 +115,11 @@ def worker_guard(*, project_root: str, workspace: str = "", record_dir: str = ""
     archive = root / "archive"  # material from building the system, never needed by the worker
     inbox = record / "inbox"
     own_space = Path(workspace).expanduser().resolve() if workspace else root / "workspace"
-    protected = [root / d for d in ("kit", "system", "agents", "scripts", "archive")] + [record]
+    protected = [root / d for d in ("prompts", "personal_assistant", "templates", "tests", "docs", "agents", "archive")] + [record]
     allowed = [Path(p).expanduser().resolve() for p in (readable or os.environ.get("PA_READABLE", "")).split(os.pathsep) if p.strip()]
     stores = [Path("~/.claude/projects").expanduser().resolve(), Path("~/.codex").expanduser().resolve()]
     private_roots = [inbox, *stores, *allowed]           # reading these marks the session as holding private data
-    read_roots = [own_space, root / "kit", *private_roots]
+    read_roots = [own_space, root / "prompts", *private_roots]
     write_roots = [own_space, inbox]
 
     def place(path: str) -> Path | None:
