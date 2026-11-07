@@ -76,12 +76,16 @@ def build() -> None:
 
 
 def open_chat(agent: str, first_message: str = "") -> None:
+    """Open the agent's chat in the terminal. With a first message, the agent starts by itself: the message goes in,
+    its reply is shown, and the same conversation then stays open for the person to answer."""
     build()
     env = ensure_omnigent()
     command = ["omnigent", "run", str(AGENTS / agent), "--server", "local"]
-    if first_message:
-        command += ["-p", first_message]
     os.chdir(ROOT)
+    if first_message:
+        print("Starting... the first reply can take a minute while it gets going.")
+        subprocess.run(command + ["-p", first_message], env=env)
+        command += ["-c"]  # back into that same conversation, now waiting for the person
     os.execvpe("omnigent", command, env)
 
 
@@ -93,14 +97,16 @@ def changes() -> None:
     for p in waiting:
         print(f"\n{p['id']}  {p['kind']}: {p['name']}  (from the {p['proposed_by']})\nWhy: {p['reason']}")
         print("    " + p["content"].strip().replace("\n", "\n    ")[:1500])
-    print(f"\n{len(waiting)} waiting. Approve with: pa approve ID (or all). Reject with: pa reject ID (or all).")
+    print(f"\n{len(waiting)} waiting. Approve with: ./pa approve ID (or all). Reject with: ./pa reject ID (or all).")
 
 
 def decide_on(ids: list[str], approve: bool) -> None:
     if not ids:
-        sys.exit("Say which: an id from `pa changes`, or all.")
+        sys.exit("Say which: an id from ./pa changes, or all.")
     done = proposals.resolve(Record(RECORD), ids, approve=approve, by="the person, with pa")
-    print(f"{'Approved' if approve else 'Rejected'}: {', '.join(done)}" if done else "No waiting change with that id.")
+    if not done:
+        sys.exit("No waiting change with that id. See ./pa changes.")
+    print(f"{'Approved' if approve else 'Rejected'}: {', '.join(done)}")
 
 
 def main() -> None:

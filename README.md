@@ -10,7 +10,12 @@ It never acts for you: it does not send, pay, book or post anything. And nothing
 
 ## Get started
 
-You need Python 3.11 or later (with `pyyaml` and `mcp`), the `claude` command signed in to your Claude plan, Omnigent, and `tmux`. No API keys are used.
+You need:
+
+- **Python 3.11 or later.** `pa` uses the `python3` first on your PATH, so install its two packages into that one: `python3 -m pip install pyyaml mcp`.
+- **The `claude` command**, signed in to your Claude plan. No API keys are used.
+- **Omnigent**, the runtime the agents live in (built and tested with version 0.16).
+- **`tmux`**, which Omnigent uses to run the case finder and the worker (`brew install tmux` on a Mac).
 
 Then start with onboarding:
 
@@ -18,23 +23,23 @@ Then start with onboarding:
 ./pa onboard
 ```
 
-This opens the onboarding chat. First it checks which of your sources it can reach, such as your mail, documents and past Claude or Codex chats, and you choose what it may read and what is off-limits. While it reads the ones you allowed, looking for real decisions you have made, it asks you the basics: your name, the lines you would never cross, and the amount of money that makes a decision a big one for you. Then it interviews you about your own decisions in sessions of about fifteen minutes. Each time it wants to add something to your record, you see it and approve or reject it with a click.
+This opens the onboarding chat in your terminal; Omnigent also prints a link where you can follow the same chat in your browser. The first reply can take a minute while it gets going. First it checks which of your sources it can reach, such as your mail, documents and past Claude or Codex chats, and you choose what it may read and what is off-limits. While it reads the ones you allowed, looking for real decisions you have made, it asks you the basics: your name (it may suggest one from your accounts for you to confirm), the lines you would never cross, and the amount of money that makes a decision a big one for you. Then it interviews you about your own decisions in sessions of about fifteen minutes. Each time it wants to add something to your record, you see it and approve or reject it with a click.
 
-You can stop at any time. Run `./pa onboard` again later and it continues where it left off.
+You can stop at any time. Run `./pa onboard` again later and it opens a new chat that picks up from your record and its own notes, so it does not ask again what it already knows.
 
 ## Commands
 
-In the order you will use them:
+In the order you will use them. `onboard`, `chat` and `review` each open a chat in your terminal; the rest just print and finish.
 
 | Command | What it does |
 |---|---|
 | `./pa onboard` | Start onboarding, or continue it where it stopped. |
 | `./pa chat` | Everyday use: talk to your chief of staff about anything, including a decision. |
-| `./pa review` | The weekly review: it checks your record for what is out of date, due, or conflicting, and brings you a short list. Run it whenever you like. |
+| `./pa review` | The weekly review: it starts by itself, checks your record for what is out of date, due, or conflicting, and brings you a short list. Run it whenever you like. |
 | `./pa changes` | See any changes to your record that are still waiting for your yes. |
 | `./pa approve ID` | Approve one waiting change, or `all`. You can also approve in the chat. |
 | `./pa reject ID` | Reject one waiting change, or `all`. |
-| `./pa check` | Check that the code works. Takes a few seconds and uses no AI. |
+| `./pa check` | Check that the code works. Takes a moment and uses no AI. |
 | `./pa stop` | Stop everything when you are done. |
 
 The agents run inside Omnigent, which `pa` starts in the background whenever a command needs it.
@@ -75,7 +80,7 @@ workspace/         where the worker and case finder may work
 record/            your own record, created on first run and never uploaded
 ```
 
-Everything in the pack is generic; everything about you lives in `record/`. The pack works from any folder, and these optional settings move things elsewhere:
+Everything in the pack is generic; everything about you lives in `record/`. Omnigent keeps its own chat history in `~/.omnigent/`. The pack works from any folder, and these optional settings move things elsewhere:
 
 | Setting | What it changes |
 |---|---|

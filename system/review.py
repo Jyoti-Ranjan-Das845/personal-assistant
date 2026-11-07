@@ -52,7 +52,7 @@ def rulings_that_conflict(record: Record) -> dict:
     items = precedents(record)
     if len(items) < 2:
         return {"conflicts": [], "look_alike_but_do_not_conflict": []}
-    text = yaml.safe_dump(items, sort_keys=False, allow_unicode=True, default=str)
+    text = yaml.safe_dump(items, sort_keys=False, allow_unicode=True)
     answer = ask_json(f"Question: rulings that pull apart.\nToday: {record.today}\n\n{text}",
                       system=CHECKER, model=MODELS["curator"], timeout=600)
     ids = {p["id"] for p in items}
@@ -69,7 +69,7 @@ def profile_against_record(record: Record) -> dict:
     are checked in code, so nothing is raised on a guess."""
     journal = record.journal()
     recent = sorted(journal, key=lambda e: str(e["front"].get("date", "")))[-12:]
-    facts = yaml.safe_dump([e["data"] for e in record.yaml_entries("facts")], sort_keys=False, allow_unicode=True, default=str)
+    facts = yaml.safe_dump([e["data"] for e in record.yaml_entries("facts")], sort_keys=False, allow_unicode=True)
     text = "\n\n".join(e["text"] for e in recent)
     answer = ask_json(f"Question: the profile against the record.\nToday: {record.today}\n\n# Profile\n{record.profile()}\n\n"
                       f"# Facts\n{facts}\n\n# Journal, most recent last\n{text}",

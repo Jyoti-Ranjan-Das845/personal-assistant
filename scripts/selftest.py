@@ -191,6 +191,24 @@ def main() -> None:
     check("deleting in an app is denied, sending asks", verdict("mcp__mail__trash_message", {})["result"] == "DENY"
           and verdict("mcp__mail__send_message", {})["result"] == "ASK")
 
+    temp_pack = worker_guard(project_root=str(tmp / "pack"), workspace=str(tmp / "pack" / "workspace"), record_dir=str(tmp / "pack" / "record"))
+    check("the pack stays shut even when it sits in a temp folder",
+          temp_pack({"type": "tool_call", "data": {"name": "Bash", "arguments": {"command": "cat ../system/decide.py"}},
+                     "session_state": {}}, {})["result"] == "DENY")
+
+    # the weekly review's checks can hand dated rulings to the checker
+    from system import review
+    (mock / "precedents").mkdir(exist_ok=True)
+    for pid, ruling in (("PR-1", "Pay fees from the rent."), ("PR-2", "Rent stays with the flat.")):
+        (mock / "precedents" / f"{pid}.yaml").write_text(f"id: {pid}\nruling: {ruling}\ndate: 2026-01-0{pid[-1]}\n", encoding="utf-8")
+    review.ask_json = lambda *a, **k: {"conflicts": [{"a": "PR-1", "b": "PR-2", "situation": "fees", "how": "x"}], "overtaken": [], "drift": []}
+    try:
+        pulls = review.rulings_that_conflict(Record(mock, date(2026, 11, 10)))
+        review.profile_against_record(Record(mock, date(2026, 11, 10)))
+        check("the weekly review's checks run on dated entries", pulls["conflicts"][0]["newer"] == "PR-2")
+    except Exception as error:
+        check("the weekly review's checks run on dated entries", False, repr(error))
+
     # someone else's decision is never predicted
     calls = []
     decide.ask = lambda prompt, **k: calls.append(prompt) or "## What lands on the person\n\nThey work nights.\n\n## Not covered\n\nThe shop's income."

@@ -190,8 +190,8 @@ def worker_guard(*, project_root: str, workspace: str = "", record_dir: str = ""
             command = str(arguments.get("command") or "")
             if SECRETS.search(command):
                 return _decision("DENY", "Secret stores such as keys, tokens and passwords are never read.")
-            outside = [p for p in _shell_paths(command)
-                       if not within(p, read_roots) and not any(inside(p, d) for d in SYSTEM_DIRS)]
+            outside = [p for p in _shell_paths(command) if not within(p, read_roots)
+                       and (within(p, [root, record]) or not any(inside(p, d) for d in SYSTEM_DIRS))]  # the pack and record stay shut, wherever they sit
             if outside:
                 return _decision("DENY", f"A native agent works only in its workspace, the record's inbox and the folders it may read. "
                                          f"Not: {', '.join(outside[:3])}")
