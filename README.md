@@ -1,79 +1,86 @@
 # Personal assistant
 
-A multi-agent "second you" for one person, built on Omnigent with Claude Code. It learns how the person judges and decides, through an onboarding interview grounded in their own real decisions, and then helps them the way they would decide, inside the hard lines they set. Nothing enters their record without their approval, and it never sends, pays, books or posts anything itself.
+A personal assistant that learns how *you* decide, and then helps you the way you would.
 
-Everything in the pack is generic. Everything about the person lives only in their record, which starts empty and is filled by their own onboarding.
+It starts by interviewing you. It looks through your own email, documents and AI chats for real decisions you have made, then asks you about them in short, easy sessions: what you noticed, what you weighed, what you would never do. What you approve becomes your record. From then on, when you bring it a decision, it reads that record, checks the options against your own hard lines, and tells you what you would most likely choose, how sure it is, and why, with a second opinion that disagrees when the evidence does.
 
-## Use it
+It never acts for you: it does not send, pay, book or post anything. And nothing goes into your record unless you approve it.
+
+![Architecture of the personal assistant](docs/architecture.svg)
+
+## Get started
+
+You need Python 3.11 or later (with `pyyaml` and `mcp`), the `claude` command signed in to your Claude plan, Omnigent, and `tmux`. No API keys are used.
+
+Then start with onboarding:
 
 ```bash
-./pa onboard          # start onboarding, or continue it where it stopped
-./pa chat             # talk to your chief of staff
-./pa review           # the weekly review of your record
-./pa changes          # changes to your record waiting for your yes
-./pa approve ID|all   # approve them (or click the card in the chat)
-./pa reject ID|all    # reject them
-./pa check            # check the code: no AI, a few seconds
-./pa stop             # stop Omnigent
+./pa onboard
 ```
 
-The agents run inside Omnigent. `pa` starts it in the background whenever a command needs it, with this folder's safeguards loaded, and writes the Omnigent configs for the machine it runs on first.
+This opens the onboarding chat. First it checks which of your sources it can reach, such as your mail, documents and past Claude or Codex chats, and you choose what it may read and what is off-limits. While it reads the ones you allowed, looking for real decisions you have made, it asks you the basics: your name, the lines you would never cross, and the amount of money that makes a decision a big one for you. Then it interviews you about your own decisions in sessions of about fifteen minutes. Each time it wants to add something to your record, you see it and approve or reject it with a click.
 
-**Needs:** Python 3.11 or later with `pyyaml` and `mcp`; the `claude` command signed in to a Claude subscription (no API keys are used); Omnigent; and `tmux`, which Omnigent uses to run the native agents.
+You can stop at any time. Run `./pa onboard` again later and it continues where it left off.
 
-## How it fits together
+## Commands
 
-The person talks to three agents:
+In the order you will use them:
 
-- **Onboarding** (`pa onboard`): the interviewer, in one chat, from the first hello to the last session. It sends the native **case finder** to discover what it can reach and, once the person approves a scope, to find real decisions in their sources; the **preparer** turns those into an interview guide built on eleven dimensions of the person; the interviewer then runs short sessions, walking through real decisions moment by moment. Every entry reaches the record only through an approval card the person clicks.
-- **Chief of staff** (`pa chat`): everyday use. It answers first, from their record; runs the fixed decision procedure for any real decision; records new decisions; and hands anything outside the record (their apps, the web) to the native **worker**.
-- **Curator** (`pa review`): the weekly review. Code finds what is stale, due, conflicting or overtaken, and the curator brings the person a short list with proposed fixes.
+| Command | What it does |
+|---|---|
+| `./pa onboard` | Start onboarding, or continue it where it stopped. |
+| `./pa chat` | Everyday use: talk to your chief of staff about anything, including a decision. |
+| `./pa review` | The weekly review: it checks your record for what is out of date, due, or conflicting, and brings you a short list. Run it whenever you like. |
+| `./pa changes` | See any changes to your record that are still waiting for your yes. |
+| `./pa approve ID` | Approve one waiting change, or `all`. You can also approve in the chat. |
+| `./pa reject ID` | Reject one waiting change, or `all`. |
+| `./pa check` | Check that the code works. Takes a few seconds and uses no AI. |
+| `./pa stop` | Stop everything when you are done. |
 
-Behind them, run by code and never talked to: the **analyst**, **advisor**, **challenger** and **tester** (the decision procedure), the **builder** (skills, trackers, rules and reminders, on the person's yes), the **policy** and **precedent checkers**, and the **quarantine reader**, which reads every outside message so that no agent ever sees its raw text.
+The agents run inside Omnigent, which `pa` starts in the background whenever a command needs it.
 
-The person's own area know-how is kept as skills in their record (`record/skills/`), written by the builder from their real decisions; a fresh record has only the template.
+## How it works
 
-## Layout
+You talk to three agents:
 
-```
-pa                 the one command
-kit/               the same for every person
-  constitution.md  what every agent follows
-  charters/        each agent's instructions
-  METHODS.md       the method behind each agent, and what code enforces
-  templates/record the empty record a person's own record starts from
-system/            the code: tools, decision procedure, policy engine, guards
-scripts/
-  build_agents.py  writes agents/ for this machine (pa runs it)
-  selftest.py      the code checks behind pa check
-  check_onboarding_live.py   a developer check of onboarding in Omnigent
-record/            the person's own record, created on first run; never uploaded
-workspace/         the only place the native agents may write, apart from the inbox
-agents/            Omnigent configs, generated on each machine; not shipped
-```
+- **Onboarding** interviews you and builds your record. Behind it, a **case finder** reads your allowed sources for real decisions, and a **preparer** turns what it finds into a plan for the interview.
+- **Chief of staff** is who you talk to every day. It answers from your record, runs the decision path for any real decision, records new decisions, and hands anything outside your record, like checking your mail or searching the web, to a **worker**.
+- **Curator** runs the weekly review and proposes fixes for you to approve.
+
+For a real decision, the chief of staff calls the **decide** tool, a fixed path written in code. An **analyst** gathers the evidence from your record, then an **advisor** reads it as you would and a **challenger** argues the other side, each on its own without seeing the other. A **tester** checks every explanation of your past choices against every past case, and the code, not an AI, sets the answer and how sure it is. A **builder** makes new pieces when you ask, such as a skill for one area of your life, a tracker or a reminder.
+
+Your record holds your core profile (values, hard lines, how you want answers), your skills, a journal of your decisions and how they turned out, dated facts, the people in your life, your past rulings, and an inbox for anything that arrives from outside.
 
 ## Safeguards
 
-They are enforced in code, not left to the agents' instructions:
+These are enforced in code, not left to the agents' good behaviour:
 
-- The agents the person talks to have no shell, files or web. Their only tools are in `system/tools_server.py`, and none of them sends, pays, books or posts.
-- The record changes only through proposals the person approves. Journal entries are never rewritten. Requests such as "don't ask me again" are never stored as rules.
-- Hard lines remove options before anything is weighed, and a money threshold in the person's own currency marks high stakes.
-- Outside messages are read by a model with no tools, and secrets and identity numbers are redacted before any agent sees them.
-- The native worker and case finder run under a guard (`system/omnigent_policies.py`) that checks every action. They may write only in `workspace/` and the record's inbox. They may read only there, in the person's Claude and Codex conversation stores, and in folders the person allows (`PA_READABLE`). Secret stores are never read. Deleting is denied, sending asks the person first, and once a session has read private data it cannot reach the web.
+- **It cannot act for you.** The agents you talk to have no shell, no files and no web, and none of their tools sends, pays, books or posts. The most they can do is prepare a draft for you to send yourself.
+- **Your record changes only with your yes.** Agents can only propose. Past journal entries are never rewritten, and a request like "don't ask me again" is never saved as a rule.
+- **Your hard lines are walls.** Any option that would cross one is removed before anything is weighed, and anything above your money line is treated as a big decision.
+- **Outside messages cannot give orders.** Emails and messages are read by a separate model with no tools, and only a summary reaches the agents. Passwords, codes and card or ID numbers are blacked out before any agent sees them.
+- **The worker and case finder stay in their lane.** They may write only in `workspace/` and your record's inbox, and read only there, in your Claude and Codex chats, and in folders you allow. They never read secret stores such as `~/.ssh`, never delete, ask you before sending anything, and lose web access once they have read your private data.
 
-See `kit/METHODS.md` for the method behind each agent and the full list of what code enforces.
+`kit/METHODS.md` explains the research method behind each agent and everything the code enforces.
 
 ## Where things live
 
-Every location is worked out from where the pack sits, so it runs from any folder on any machine. Set these to move things:
+```
+pa                 the one command
+kit/               the same for everyone: the constitution, each agent's instructions, templates
+system/            the code: tools, the decision path, the policy engine, the guards
+scripts/           helpers pa runs for you
+docs/              the architecture diagram
+workspace/         where the worker and case finder may work
+record/            your own record, created on first run and never uploaded
+```
 
-| Variable | What it moves | Default |
-|---|---|---|
-| `PA_RECORD` | the person's record (created from `kit/templates/record` if missing) | `record/` |
-| `PA_WORKSPACE` | the native agents' working folder | `workspace/` |
-| `PA_STATE` | session state and traces | `state/` |
-| `PA_READABLE` | extra folders the native agents may read, joined by `:` | none |
-| `OMNIGENT_SERVER` | an Omnigent server other than the local one | `http://127.0.0.1:6767` |
+Everything in the pack is generic; everything about you lives in `record/`. The pack works from any folder, and these optional settings move things elsewhere:
 
-When an approved change touches the person's name, profile, rules or skills, the configs are rebuilt so new sessions start from the approved record. Nothing runs on a schedule unless the person sets one up.
+| Setting | What it changes |
+|---|---|
+| `PA_RECORD` | Keep your record in another folder, such as a private one. |
+| `PA_READABLE` | Folders the case finder and worker may read, beyond your Claude and Codex chats, joined by `:`. |
+| `PA_WORKSPACE` | Move the worker's working folder. |
+| `PA_STATE` | Move session state and logs. |
+| `OMNIGENT_SERVER` | Use an Omnigent server other than the local one. |
