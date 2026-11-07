@@ -1,0 +1,128 @@
+#!/usr/bin/env python3
+"""pa: the one command for the personal assistant.
+
+    pa onboard          start onboarding, or continue it where it stopped
+    pa chat             talk to your chief of staff
+    pa review           run the weekly review of your record
+    pa changes          list the changes to your record waiting for your yes
+    pa approve ID|all   approve waiting changes
+    pa reject ID|all    reject waiting changes
+    pa check            check the code (no AI, a few seconds)
+    pa stop             stop Omnigent
+
+The agents run inside Omnigent, which pa starts in the background whenever a
+command needs it, so there is nothing to start by hand, even after a restart.
+"""
+
+import os
+import shutil
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent
+sys.path.insert(0, str(ROOT))
+
+from system import proposals  # noqa: E402
+from system.config import AGENTS, RECORD  # noqa: E402
+from system.record import Record  # noqa: E402
+
+
+def omnigent_env() -> dict:
+    """Omnigent imports the worker's guard from this folder, so the folder must be on its PYTHONPATH."""
+    paths = [str(ROOT)] + [p for p in os.environ.get("PYTHONPATH", "").split(os.pathsep) if p and p != str(ROOT)]
+    return {**os.environ, "PYTHONPATH": os.pathsep.join(paths)}
+
+
+def omnigent_up() -> bool:
+    status = subprocess.run(["omnigent", "host", "status"], capture_output=True, text=True)
+    return "host=online" in status.stdout
+
+
+def started_from_here() -> bool:
+    """Whether the running Omnigent can import the guard, judged by its PYTHONPATH."""
+    for pid in subprocess.run(["pgrep", "-f", "omnigent"], capture_output=True, text=True).stdout.split():
+        env = subprocess.run(["ps", "eww", "-p", pid, "-o", "command="], capture_output=True, text=True).stdout
+        if "PYTHONPATH=" in env and str(ROOT) not in env.split("PYTHONPATH=", 1)[1].split()[0]:
+            return False
+    return True
+
+
+def ensure_omnigent() -> dict:
+    if not shutil.which("omnigent"):
+        sys.exit("Omnigent is not installed. Install it first, then run this again.")
+    env = omnigent_env()
+    if omnigent_up() and not started_from_here():
+        print("Restarting Omnigent so it can load this folder's safeguards...")
+        subprocess.run(["omnigent", "stop"], capture_output=True)
+    if not omnigent_up():
+        print("Starting Omnigent...")
+        subprocess.run(["omnigent", "start", "--server", "", "--no-open"], env=env, cwd=ROOT, check=True, capture_output=True)
+        for _ in range(60):
+            if omnigent_up():
+                break
+            time.sleep(1)
+        else:
+            sys.exit("Omnigent did not come up. Run `omnigent diagnose` to see why.")
+    return env
+
+
+def build() -> None:
+    """Write the Omnigent configs for this machine from the charters and the person's record."""
+    done = subprocess.run([sys.executable, str(ROOT / "scripts" / "build_agents.py")], cwd=ROOT, capture_output=True, text=True)
+    if done.returncode != 0:
+        sys.exit(done.stderr.strip() or done.stdout.strip())
+
+
+def open_chat(agent: str, first_message: str = "") -> None:
+    build()
+    env = ensure_omnigent()
+    command = ["omnigent", "run", str(AGENTS / agent), "--server", "local"]
+    if first_message:
+        command += ["-p", first_message]
+    os.chdir(ROOT)
+    os.execvpe("omnigent", command, env)
+
+
+def changes() -> None:
+    waiting = proposals.pending(Record(RECORD))
+    if not waiting:
+        print("Nothing is waiting for your approval.")
+        return
+    for p in waiting:
+        print(f"\n{p['id']}  {p['kind']}: {p['name']}  (from the {p['proposed_by']})\nWhy: {p['reason']}")
+        print("    " + p["content"].strip().replace("\n", "\n    ")[:1500])
+    print(f"\n{len(waiting)} waiting. Approve with: pa approve ID (or all). Reject with: pa reject ID (or all).")
+
+
+def decide_on(ids: list[str], approve: bool) -> None:
+    if not ids:
+        sys.exit("Say which: an id from `pa changes`, or all.")
+    done = proposals.resolve(Record(RECORD), ids, approve=approve, by="the person, with pa")
+    print(f"{'Approved' if approve else 'Rejected'}: {', '.join(done)}" if done else "No waiting change with that id.")
+
+
+def main() -> None:
+    command, args = (sys.argv[1], sys.argv[2:]) if len(sys.argv) > 1 else ("help", [])
+    if command == "onboard":
+        started = bool(Record(RECORD).person().get("name"))
+        open_chat("onboarding", "Hi, let's continue where we left off." if started else "Hi, let's get me set up.")
+    elif command == "chat":
+        open_chat("chief_of_staff")
+    elif command == "review":
+        open_chat("curator", "It's time for the weekly review.")
+    elif command == "changes":
+        changes()
+    elif command in ("approve", "reject"):
+        decide_on(args, approve=command == "approve")
+    elif command == "check":
+        sys.exit(subprocess.run([sys.executable, str(ROOT / "scripts" / "selftest.py")]).returncode)
+    elif command == "stop":
+        subprocess.run(["omnigent", "stop"])
+    else:
+        print(__doc__.strip())
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,9 @@
+# A ruling they made on a situation nothing else covered. Newer approved rulings win; conflicts go to the curator.
+id: PR-YYYYMMDD-short-name
+situation: ""       # the pattern, described so it can be matched
+applies_when: ""    # the scope: when this ruling should and should not be used
+ruling: ""
+reason: ""          # their reason, in their words
+date: YYYY-MM-DD
+approved_by: them
+source: ""          # journal id or inbox file

@@ -1,0 +1,5 @@
+# A reminder the person asked for. The weekly review and the chief of staff raise it when it falls due.
+date: YYYY-MM-DD     # the day to remind them
+what: ""             # what to tell them, in their terms
+about: ""            # the fact, tracker or journal entry it concerns, if any
+asked_on: YYYY-MM-DD

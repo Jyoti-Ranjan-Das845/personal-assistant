@@ -1,0 +1,14 @@
+# Generated on each machine by scripts/build_agents.py; never shipped
+agents/
+state/
+__pycache__/
+
+# The native agents' working folder: only what they write while running
+workspace/*
+!workspace/.keep
+
+# Material from building the system; not part of the pack
+archive/
+
+# The person's own record: created from kit/templates/record on first run, and never uploaded
+record/

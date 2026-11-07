@@ -1,0 +1,9 @@
+# One file per person who matters to their decisions. Keep only what decisions need.
+id: P-short-name
+name: ""
+role: ""            # e.g. manager, co-founder, partner
+history: ""         # a few lines of relevant history with them
+notes: ""           # what they have said about how this person thinks or reacts
+decisions: []       # journal ids involving this person
+sensitivity: normal # normal | sensitive
+as_of: YYYY-MM-DD
